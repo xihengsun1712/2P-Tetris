@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080b12">
+  <meta name="description" content="Two-player, one-board Tetris with direct peer-to-peer play.">
+  <title>2P Tetris — One board. Two falling pieces.</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23080b12'/%3E%3Cpath d='M10 14h18v12H16v12h12v12H10z' fill='%23ff4d67'/%3E%3Cpath d='M36 14h18v36H36V38h12V26H36z' fill='%235c8dff'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="ambient ambient-red" aria-hidden="true"></div>
+  <div class="ambient ambient-blue" aria-hidden="true"></div>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="2P Tetris home">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i></span>
+        <span>2P <span>Tetris</span></span>
+      </a>
+
+      <section class="room-console" aria-label="Room connection">
+        <div class="room-code-wrap">
+          <span class="eyebrow">YOUR ROOM</span>
+          <button id="copy-code" class="room-code" type="button" aria-label="Copy your four-digit room code">
+            <span id="room-code">····</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V5.8A1.8 1.8 0 0 1 9.8 4h8.4A1.8 1.8 0 0 1 20 5.8v8.4a1.8 1.8 0 0 1-1.8 1.8H16m-8-8H5.8A1.8 1.8 0 0 0 4 9.8v8.4A1.8 1.8 0 0 0 5.8 20h8.4a1.8 1.8 0 0 0 1.8-1.8V16m-8-8h6.2A1.8 1.8 0 0 1 16 9.8V16H9.8A1.8 1.8 0 0 1 8 14.2z"/></svg>
+          </button>
+        </div>
+
+        <div class="join-form" role="group" aria-label="Join a room">
+          <label for="join-code">JOIN A ROOM</label>
+          <div class="join-row">
+            <input id="join-code" inputmode="numeric" autocomplete="one-time-code" maxlength="4" placeholder="0000" aria-label="Four-digit room code">
+            <button id="join-button" class="primary-button" type="button">Join</button>
+          </div>
+        </div>
+
+        <div class="connection-block">
+          <div id="connection-status" class="connection-status" data-state="waiting">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="connection-label">Opening room…</span>
+          </div>
+          <span id="latency" class="latency" aria-label="Network latency">— ms</span>
+        </div>
+
+        <button id="local-duo" class="quiet-button" type="button">Local duo</button>
+      </section>
+    </header>
+
+    <main class="game-stage">
+      <aside class="player-panel player-one" aria-label="Player 1 panel">
+        <div class="player-title">
+          <span class="player-index">01</span>
+          <div><strong>PLAYER 1</strong><span id="p1-role">HOST</span></div>
+          <span class="player-pulse" aria-hidden="true"></span>
+        </div>
+
+        <section class="piece-section">
+          <div class="section-label"><span>HOLD</span><span id="p1-hold-state">READY</span></div>
+          <div class="preview-box hold-box"><canvas id="p1-hold" aria-label="Player 1 held piece"></canvas></div>
+        </section>
+
+        <section class="piece-section">
+          <div class="section-label"><span>NEXT</span><span>2 PIECES</span></div>
+          <div class="queue-stack">
+            <div class="preview-box queue-box"><canvas id="p1-next-0" aria-label="Player 1 next piece"></canvas></div>
+            <div class="preview-box queue-box dim"><canvas id="p1-next-1" aria-label="Player 1 second next piece"></canvas></div>
+          </div>
+        </section>
+
+      </aside>
+
+      <section class="board-column" aria-label="Shared Tetris board">
+        <div class="board-status-line">
+          <span id="mode-label">SHARED BOARD</span>
+          <span class="live-mark"><i aria-hidden="true"></i><span id="live-label">STANDBY</span></span>
+        </div>
+        <div class="board-frame">
+          <div class="corner corner-tl" aria-hidden="true"></div>
+          <div class="corner corner-tr" aria-hidden="true"></div>
+          <div class="corner corner-bl" aria-hidden="true"></div>
+          <div class="corner corner-br" aria-hidden="true"></div>
+          <canvas id="game-board" role="img" aria-label="Empty shared Tetris board, waiting for a second player"></canvas>
+          <div id="game-overlay" class="game-overlay">
+            <div id="overlay-kicker" class="overlay-kicker">ROOM READY</div>
+            <strong id="overlay-title">Send your code</strong>
+            <p id="overlay-copy">The match starts when Player 2 joins.</p>
+            <button id="overlay-action" class="overlay-action" type="button">Play local duo</button>
+          </div>
+          <div id="countdown" class="countdown" aria-live="assertive"></div>
+        </div>
+
+        <div class="touch-controls" aria-label="Touch controls">
+          <button type="button" data-action="left" aria-label="Move left">←</button>
+          <button type="button" data-action="right" aria-label="Move right">→</button>
+          <button type="button" data-action="rotateCW" aria-label="Rotate">↻</button>
+          <button type="button" data-action="down" aria-label="Soft drop">↓</button>
+          <button type="button" data-action="hold" aria-label="Hold piece">H</button>
+          <button type="button" data-action="hardDrop" class="drop-control" aria-label="Hard drop">DROP</button>
+        </div>
+      </section>
+
+      <aside class="player-panel player-two" aria-label="Player 2 panel">
+        <div class="player-title">
+          <span class="player-index">02</span>
+          <div><strong>PLAYER 2</strong><span id="p2-role">GUEST</span></div>
+          <span class="player-pulse" aria-hidden="true"></span>
+        </div>
+
+        <section class="piece-section">
+          <div class="section-label"><span>HOLD</span><span id="p2-hold-state">READY</span></div>
+          <div class="preview-box hold-box"><canvas id="p2-hold" aria-label="Player 2 held piece"></canvas></div>
+        </section>
+
+        <section class="piece-section">
+          <div class="section-label"><span>NEXT</span><span>2 PIECES</span></div>
+          <div class="queue-stack">
+            <div class="preview-box queue-box"><canvas id="p2-next-0" aria-label="Player 2 next piece"></canvas></div>
+            <div class="preview-box queue-box dim"><canvas id="p2-next-1" aria-label="Player 2 second next piece"></canvas></div>
+          </div>
+        </section>
+
+      </aside>
+    </main>
+
+    <footer class="stats-rail" aria-label="Game statistics">
+      <div class="stat-cell level-cell">
+        <span>LEVEL</span><strong id="level-value">1</strong>
+        <div id="level-track" class="level-track" aria-label="Level 1 of 5">
+          <i class="active"></i><i></i><i></i><i></i><i></i>
+        </div>
+      </div>
+      <div class="stat-cell"><span>SCORE</span><strong id="score-value">000,000</strong></div>
+      <div class="stat-cell"><span>LINES</span><strong id="lines-value">00</strong></div>
+      <div class="stat-cell speed-cell"><span>GRAVITY</span><strong id="speed-value">800 <small>ms</small></strong></div>
+      <div class="footer-actions">
+        <button id="restart-button" type="button">Restart</button>
+        <button id="sound-button" type="button" aria-pressed="true"><span aria-hidden="true">◖))</span> Sound</button>
+      </div>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script defer src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

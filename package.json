@@ -1,0 +1,10 @@
+{
+  "name": "2p-tetris",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "check": "node --check dist/tetris-core.js && node --check dist/app.js"
+  }
+}
