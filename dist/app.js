@@ -82,7 +82,7 @@ const visualEffects = [];
 const pendingGuestInputs = [];
 const heldControls = new Map();
 const HORIZONTAL_DAS_MS = 105;
-const HORIZONTAL_ARR_MS = 28;
+const HORIZONTAL_ARR_MS = 32;
 const SOFT_DROP_DAS_MS = 70;
 const SOFT_DROP_ARR_MS = 38;
 
@@ -702,9 +702,9 @@ function drawBoard(state, now) {
       for (const { x, y } of getPieceCells(ghost)) {
         if (y < 0) continue;
         ctx.save();
-        ctx.globalAlpha = 0.18;
+        ctx.globalAlpha = 0.26;
         ctx.strokeStyle = COLORS[player].main;
-        ctx.lineWidth = 1.2;
+        ctx.lineWidth = 1.4;
         ctx.setLineDash([3, 3]);
         ctx.strokeRect(x * cellW + 3, y * cellH + 3, cellW - 6, cellH - 6);
         ctx.restore();
